@@ -1,0 +1,24 @@
+{
+  "name": "aicontentdrop",
+  "version": "0.2.0",
+  "description": "Plan AI video, image and short-drama work: pick the model, write the prompt, price the job, outline the episode. Text advice only; no generation happens inside Claude.",
+  "author": {
+    "name": "AI Content Drop",
+    "email": "support@aicontentdrop.com",
+    "url": "https://aicontentdrop.com"
+  },
+  "homepage": "https://aicontentdrop.com/plugin",
+  "repository": "https://github.com/aicontentdrop/claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "ai-video",
+    "video-generation",
+    "image-generation",
+    "prompt-writing",
+    "model-selection",
+    "storyboard",
+    "short-drama",
+    "screenwriting",
+    "credits"
+  ]
+}
