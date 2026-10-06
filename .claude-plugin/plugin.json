@@ -1,6 +1,6 @@
 {
   "name": "aicontentdrop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Plan AI video, image and short-drama work: pick the model, write the prompt, price the job, outline the episode. Text advice only; no generation happens inside Claude.",
   "author": {
     "name": "AI Content Drop",
