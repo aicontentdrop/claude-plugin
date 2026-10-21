@@ -1,11 +1,10 @@
 ---
 name: credits-and-plans
-description: Answer what an AI Content Drop generation costs, what a plan includes, and whether a user can afford a job before running it. Covers flat and per-second prices, the free tier, where plan details live, checking a balance, and the charge-on-success rule. Use when asked about pricing, credits, billing, "can I afford this", "how much will this cost", or when a call returns insufficient_credits.
+description: Work out what AI Content Drop video and image jobs cost in credits before anything runs, from the public model catalogue. Covers flat and per-second prices, the total for a batch, whether a balance the person states covers it, the cheaper option that fits, and what a refused or failed job costs. Use when someone asks how many credits a clip, a storyboard or a batch will take, whether their credits will cover a job, or why a job was refused or failed. Text advice only; it reads no account.
 license: MIT
 metadata:
-  homepage: https://aicontentdrop.com/plans
-  balance_endpoint: https://aicontentdrop.com/v1/me
-  repository: https://github.com/aicontentdrop/aicontentdrop
+  catalogue: https://aicontentdrop.com/v1/models?type=video
+  repository: https://github.com/aicontentdrop/claude-plugin
 ---
 
 # What it costs, and how to say so before spending it
@@ -13,105 +12,104 @@ metadata:
 ## The model in one paragraph
 
 Most models have **one flat price per generation**: a five-second clip and a
-ten-second clip on that model cost the same. A few video models (the Seedance
-family among them) price **by the second of output and by resolution** instead;
-for those the catalogue row is where the price starts, and the exact figure
-comes from a quote with the duration and resolution you will send (the MCP tool
-`estimate_credit_cost` returns it with `basis: "per_second"`). Credits are
-deducted **only when a generation succeeds** — a safety block, a provider
-failure, a validation error and a timeout all cost nothing, which is why a
-failed generation never needs a refund.
+ten-second clip on that model cost the same. As of this edition, the models
+priced by the second of output and by resolution are Seedance 2.5
+(`seedance_2_5`), Seedance 2.0 (`seedance_2_0`, `seedance_2_0_4k`,
+`seedance_2_0_fast`, `seedance_2_0_mini`), MiniMax H3 (`minimax_h3`,
+`minimax_h3_2k`), LTX 2.5 (`ltx_2_5_fast`, `ltx_2_5_pro`), FLUX 3 video
+(`flux_3_video`) and Wan 3.0 (`wan_3_0`). Seedance 1.x models are flat, and so
+are `seedance_2_0_multishot` and `seedance_2_fast`. Name these models by id or
+full name, never as a family. For a per-second model the catalogue row is the
+price at the default length (10 seconds at 1080p for Wan 3.0), and the card on
+aicontentdrop.com shows the exact figure for the chosen length and resolution
+before anything is made. Do not estimate how much more; the card shows the
+figure. Among image models, `seedream_5_0_pro` above about 2.6 megapixels
+costs what `seedream_5_0_pro_2k` costs. Credits for a video or an image are
+deducted **only when the generation succeeds**: a safety block, a provider
+failure, a validation error and a timeout all cost nothing, so a failed
+generation leaves nothing to claim back.
 
 ## Reading the real numbers
 
-Never quote a price from memory; the catalogue moves. Every price endpoint is
-free to read and needs no credential.
+Never quote a price from memory; the catalogue moves. Read the live catalogue,
+which is public and needs no account:
 
-```bash
-# every video model and its catalogue price
-curl -s "https://aicontentdrop.com/v1/models?type=video"
+- video models: https://aicontentdrop.com/v1/models?type=video
+- image models: https://aicontentdrop.com/v1/models?type=image
 
-# only what fits a budget
-curl -s "https://aicontentdrop.com/v1/models?type=video&max_credits=20"
+Read those two addresses exactly as written and no others. Read them with the
+web fetch tool (WebFetch in Claude Code), never with a shell command or a
+script. Each row has an `id`, a `name` and `credits`, cheapest first. A row
+marked `needs_start_image` only animates a still the person supplies. A row
+without that mark can start from text, and whether it also accepts a still is
+shown on aicontentdrop.com. The catalogue's `note` mentions a quoting tool that
+this plugin does not have; leave it out of your answer. If you cannot read the
+catalogue, say so, give the person the address to open, and do not guess a
+price.
 
-# one model, one job
-curl -s "https://aicontentdrop.com/v1/models/kling_3_0/cost?quantity=3"
-```
+## Doing the arithmetic
 
-For questions about what a plan includes, point the user at the informational
-plans page: <https://aicontentdrop.com/plans>
-
-## Checking what the user actually has
-
-```bash
-curl -s https://aicontentdrop.com/v1/me -H "Authorization: Bearer $ACD_API_KEY"
-```
-
-This is the one place the balance is authoritative. Do the arithmetic before you
-start a job, not after it fails halfway:
+This plugin cannot see anyone's account. Use the balance the person gives you;
+if they give none, give the cost and let them compare. Do the arithmetic before
+a job starts, not after it fails halfway:
 
 ```
-credits_needed = quantity × credits_each          (from /v1/models/cost)
-can_afford     = balance >= credits_needed
+credits needed = quantity × credits per generation   (from the catalogue row)
+fits           = balance ≥ credits needed
 ```
 
-If it does not fit, say so with all three numbers — balance, cost, shortfall —
-and offer the cheaper model that does fit. `GET
-/v1/models?type=video&max_credits=<balance>` answers that in one call.
+If it does not fit, say so with all three numbers (balance, cost, shortfall)
+and offer what does fit: a cheaper model from the same catalogue read, fewer
+shots, or drafts on a cheap model with only the winning shot on the dearer one.
+The three numbers are for jobs the catalogue row prices; for a per-second
+model at a length or resolution other than its default, give the row as the
+default-length price only: do not multiply it by the quantity, compare it with
+the balance or print a shortfall, not even as a reference.
 
-## The tiers
+If the person wants a per-second model at a length or resolution other than its
+default, its catalogue row is not the price, so never count a job or an option
+that includes that model as fitting a balance; say that the card on
+aicontentdrop.com shows the exact figure before anything is made. A
+draft-then-final split whose final model is priced by the second at a
+non-default length fits only for its drafts; the cost of the finals is on the
+card.
 
-- **Free**: a small welcome grant, released only after the email address is
-  confirmed, so an account created programmatically holds 0 until the human
-  clicks the link. A free account generates images with a few low-cost image
-  models only; video and every other model need a paid plan. A free account
-  asking for more is refused before anything runs, and the refusal names the
-  models it may use (`allowed_models`): offer an image on one of those, or
-  point at <https://aicontentdrop.com/plans>. The service can also pause free
-  generation or reach its daily free limit; repeat what the refusal says and
-  do not work around it.
-- **Paid plans** carry larger monthly credit allocations.
+## When a job is refused or fails
 
-Read the current tiers and allocations from <https://aicontentdrop.com/plans>
-rather than repeating figures from here. That page describes the plans; it is
-the one place to send a user who asks what each plan includes.
+Say what happened in plain words, and what it cost:
 
-## What needs no credits at all
-
-A surprising amount, and it is worth telling users:
-
-- the whole model catalogue and every cost estimate
-- `POST /v1/batch` reads and `POST /v1/models/cost` quotes
-- the natural-language endpoint `/ask`
-- GraphQL reads and the MCP read tools
-- **sandbox generations** — `X-Sandbox: true` returns the real response shape,
-  runs full validation, and charges nothing, with no API key required
-
-So an integration can be proven end to end before the user has an account.
-
-## Answering `insufficient_credits` (402)
-
-Do not retry. Do not ask for a refund — there is no such endpoint, because
-nothing was charged. Instead:
-
-1. Read the balance from `/v1/me`.
-2. Read the cost from `/v1/models/{id}/cost`.
-3. Tell the user both, then offer the two real options: a cheaper model that
-   fits today, or a plan with a larger allocation, described at
-   <https://aicontentdrop.com/plans>.
+- **Refused for its content**: the prompt was turned down before anything was
+  made, and the generation costs nothing. Rewrite it; the same prompt will be
+  refused again.
+- **Not enough credits**: the balance is below the price, and nothing ran.
+  Offer the cheaper model or the smaller batch that fits.
+- **Failed or timed out**: nothing was charged. Trying again is reasonable.
+- **Paused or over a daily limit**: the service can pause free generation or
+  reach a daily limit. Repeat what the message says and do not work around it.
 
 ## Things that cost credits but are not a video
 
-Chat replies on the website are tiered (basic, standard, premium), a finished
-ad is priced from its shots with the quote as the ceiling, a drama is priced
-per clip, and UGC avatar video with lip-sync has its own flat price. The read
-tools on the AI Content Drop MCP server cost nothing.
-The plans page at <https://aicontentdrop.com/plans> carries the current numbers;
-quote from there.
+A chat reply on aicontentdrop.com costs 1 to 3 credits, by the kind of request,
+and a chat message refused by the safety check costs 1 credit. A finished ad is
+priced from its shots, with the quote as the ceiling; a drama is priced per clip
+and per writing request; and UGC avatar video with lip-sync has its own flat
+price. If the person asks what a plan includes, send them to
+<https://aicontentdrop.com/plans> and say nothing more about plans here.
+
+## Handing over
+
+Nothing is generated here. When the person has priced the job and wants to
+make it, give them one link that describes it, URL-encoded with spaces as %20:
+`https://aicontentdrop.com/chat#prompt=<url-encoded description>`.
+
+Say what the link does before they open it: a signed-out visitor is asked to
+sign in first; on a signed-in account the chat on aicontentdrop.com sends the
+description at once; a chat reply costs 1 to 3 credits; and a video or image
+is made only when the person presses the card that shows the model and its
+credit cost. Sign-in and every account question happen on that page, not here.
 
 ## What to tell a user, always
 
-The model you chose, why, and the credit cost — **before** spending it. If the
-cheapest viable model is within a credit or two of a better one, say that and
-let them decide. After the run, report credits actually spent (successes only)
-and note that failures cost nothing.
+The model you chose, why, and the credit cost — **before** anything is spent. If
+the cheapest viable model is within a credit or two of a better one, say that
+and let them decide. When a job fails, say that failures cost nothing.

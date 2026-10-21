@@ -1,10 +1,10 @@
 ---
 name: short-drama-writer
-description: Write a short vertical drama that holds a phone audience, as text, with a premise with built-in conflict, an episode outline with a hook in the first seconds, one visible power move per scene, a status reversal, a shot for every beat and an ending that demands the next episode. Produces a logline, cast, and scene-by-scene beats with shots and dialogue sized to 15, 30, 60 or 90 second episodes, ready to paste into AI Content Drop's Drama Studio. Use when asked to write, outline, fix or punch up a short drama, a mini-series, a vertical episode, a soap-style story, or a premise for one. Text advice only; it renders nothing.
+description: Write a short vertical drama that holds a phone audience, as text, with a premise with built-in conflict, an episode outline with a hook in the first seconds, one visible power move per scene, a status reversal, a shot for every beat and an ending that demands the next episode. Produces a logline, cast, and scene-by-scene beats with shots and dialogue sized to 15, 30, 60 or 90 second episodes, ready to paste into AI Content Drop's Drama Studio. Use when someone wants to write, outline, fix or punch up a short drama, a micro-drama, a mini-series, a vertical episode or a soap-style story, or to test a premise for one. Text advice only; it renders nothing.
 license: MIT
 metadata:
   homepage: https://aicontentdrop.com/generate/drama
-  repository: https://github.com/aicontentdrop/aicontentdrop
+  repository: https://github.com/aicontentdrop/claude-plugin
 ---
 
 # Writing a short drama people keep swiping for
@@ -107,9 +107,9 @@ Turn: (the beat that changes what someone wants)
 Ending hook:
 ```
 
-Then tell the person the next step in one line: open
+If the person wants to make it, tell them the next step in one line: open
 <https://aicontentdrop.com/generate/drama>, start a drama with this premise and
 settings, and use the outline as the writing instruction. Drama Studio writes
-the full script, shows the cost of every clip before anything renders, and
-cuts the finished episode. Questions about what a plan includes go to
-<https://aicontentdrop.com/plans>.
+the full script, shows the price of each writing request and the cost of every
+clip before anything renders, and cuts the finished episode. Questions about
+what a plan includes go to <https://aicontentdrop.com/plans>.

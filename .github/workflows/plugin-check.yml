@@ -1,0 +1,107 @@
+name: Plugin check
+
+# Checks the plugin as committed, reading nothing from the network but this
+# repository: the manifest parses, names the plugin and carries a semver
+# version; the plugin ships no MCP server, hooks or agents; and every address
+# in the plugin's files is on the list README.md publishes under "Every address
+# in the plugin". The skills are advisory editions built in the source
+# repository, whose tests are the full gate.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The manifest parses, names the plugin and has a semver version
+        run: |
+          node -e '
+            const fs = require("fs");
+            let manifest;
+            try {
+              manifest = JSON.parse(fs.readFileSync(".claude-plugin/plugin.json", "utf8"));
+            } catch (error) {
+              console.log("::error::.claude-plugin/plugin.json does not parse: " + error.message);
+              process.exit(1);
+            }
+            const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
+            if (manifest.name !== "aicontentdrop") {
+              console.log("::error::the manifest names " + JSON.stringify(manifest.name) + ", not aicontentdrop");
+              process.exit(1);
+            }
+            if (typeof manifest.version !== "string" || !semver.test(manifest.version)) {
+              console.log("::error::the manifest version " + JSON.stringify(manifest.version) + " is not semver");
+              process.exit(1);
+            }
+            console.log("manifest: " + manifest.name + " " + manifest.version);
+          '
+
+      - name: The plugin ships no MCP server, hooks or agents
+        run: |
+          found=$(find . -path ./.git -prune -o \( -name .mcp.json -o -name hooks -o -name agents \) -print)
+          if [ -n "$found" ]; then
+            while IFS= read -r entry; do
+              echo "::error::$entry is not allowed in this advisory plugin"
+            done <<< "$found"
+            exit 1
+          fi
+          echo "no .mcp.json, hooks or agents in the plugin"
+
+      - name: Every address in the plugin is on the published list
+        run: |
+          # The list README.md prints under "Every address in the plugin". The
+          # entry that ends in "#prompt=" starts the hand-off link: the drafted
+          # text follows it in the address.
+          published=(
+            "https://aicontentdrop.com/v1/models?type=video"
+            "https://aicontentdrop.com/v1/models?type=image"
+            "https://aicontentdrop.com/chat#prompt="
+            "https://aicontentdrop.com/generate/drama"
+            "https://aicontentdrop.com/plans"
+            "https://aicontentdrop.com/privacy-policy"
+            "https://aicontentdrop.com"
+            "https://github.com/aicontentdrop/claude-plugin"
+          )
+          on_list() {
+            local entry
+            for entry in "${published[@]}"; do
+              if [[ "$entry" == *"#prompt=" ]]; then
+                [[ "$1" == "$entry"* ]] && return 0
+              else
+                [[ "$1" == "$entry" ]] && return 0
+              fi
+            done
+            return 1
+          }
+          # An address runs to the first space, ")", ">", quote, backtick or "]",
+          # less any trailing ".", ",", ";" or ":".
+          mapfile -t addresses < <(
+            grep -rahoE --exclude-dir=.git --exclude-dir=.github "https?://[^][:space:])>\"'\`]+" . |
+              sed -E 's/[.,;:]+$//' | sort -u
+          )
+          if [ "${#addresses[@]}" -eq 0 ]; then
+            echo "::error::found no address at all, so the check read nothing"
+            exit 1
+          fi
+          status=0
+          for address in "${addresses[@]}"; do
+            if on_list "$address"; then
+              echo "on the list: $address"
+            else
+              echo "::error::not on the published list: $address"
+              status=1
+            fi
+          done
+          exit "$status"
