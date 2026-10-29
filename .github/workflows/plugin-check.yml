@@ -69,6 +69,7 @@ jobs:
             "https://aicontentdrop.com/v1/models?type=image"
             "https://aicontentdrop.com/chat#prompt="
             "https://aicontentdrop.com/generate/drama"
+            "https://aicontentdrop.com/make"
             "https://aicontentdrop.com/plans"
             "https://aicontentdrop.com/privacy-policy"
             "https://aicontentdrop.com"
